@@ -28,7 +28,7 @@ def run_mvn(input_text):
     return p.stdout
 
 def test_1():
-    filecode = submission_path / "ex2-subtracao.mvn"
+    filecode = submission_path / "subtracao.mvn"
     assert filecode.exists(), f"A submissão não contém o arquivo '{filecode.name}'"
     
     with open(filecode, mode='r') as f:
