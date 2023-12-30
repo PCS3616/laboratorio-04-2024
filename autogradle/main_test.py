@@ -5,11 +5,21 @@ import tempfile
 
 submission_path = Path("./submission")
 
+def limpa(string):
+    res=string.split(" ")
+    res=list(filter(None, res))
+    return int(res[1]+res[2],16)
+
 def twos_complement(hexstr,bits):
     value = int(hexstr,16)
     if value & (1 << (bits-1)):
         value -= 1 << bits
     return value
+  
+def fatorial(n: int):
+  if n <= 1:
+    return 1
+  return n*fatorial(n-1)
 
 def run_mvn(input_text):
     # I hate the current MVN
@@ -64,45 +74,15 @@ def test_1():
     assert x-y == r, \
         f"Seu código não está correto\nConfira seu envio."
 
-def test_2():
-    filecode = submission_path / "op-mnem.mvn"
+def test_2(n: int = 0):
+    filecode = submission_path / "fatorial.mvn"
     assert filecode.exists(), f"A submissão não contém o arquivo '{filecode.name}'"
 
+    n_str = "{:04X}".format(n)
     input_file = tempfile.NamedTemporaryFile(mode='w')
-    input_file.writelines("""
-0000 0300
-
-; Testa OP2MNEM e MNEM2OP
-;;
-02FC 0000 ; OP2MNEM funcionou?
-02FE 0000 ; MNEM2OP funcionou?
-;;
-0300 8410 ; Carrega OPCODE de JZ
-0302 9010 ; Escreve no operador de OPCODE
-0304 A100 ; Chama OP2MNEM
-0306 8412 ; Carrega MNEM de JZ
-0308 5012 ; Subtrai MNEM de JZ do resultado de OP2MNEM
-030A 130E ; Se for igual, sinaliza que funcionou
-030C 0312 ; Senão, continua
-030E 3001 ; AC <= 1
-0310 92FC ; Sinaliza que OP2MNEM funcionou
-0312 3000 ; AC <= 0
-0314 9010 ; OPCODE <= 0
-0316 9012 ; MNEM <= 0
-0318 8412 ; Carrega MNEM de JZ
-031A 9012 ; Escreve no operador de MNEM
-031C A200 ; Chama MNEM2OP
-031E 8410 ; Carrega OPCODE de JZ
-0320 5010 ; Subtrai OPCODE de JZ do resultado de MNEM2OP
-0322 1326 ; Se for igual, sinaliza que funcionou
-0324 032A ; Senão, finaliza MAIN
-0326 3001 ; AC <= 1
-0328 92FE ; Sinaliza que MNEM2OP funcionou
-032A C32A ; HALT
-
-0410 0001
-0412 4A5A
-    """)
+    input_file.writelines([
+        f"0100	{n_str}\n"
+    ])
     input_file.flush()
 
     output_file = tempfile.NamedTemporaryFile(mode='r')
@@ -114,19 +94,29 @@ def test_2():
         "",
         "r",
         "0",
-        "y",
+        "n",
         "",
-        f"m 02FC 02FF {output_file.name}",
+        f"m 0102 0103 {output_file.name}",
         "",
         "x",
         "",
     ]
 
-    out = run_mvn('\n'.join(inputs))
+    run_mvn('\n'.join(inputs))
 
-    mvn_output = output_file.read().lstrip('02f0:').strip()
+    fat = limpa(output_file.read())
 
-    print(mvn_output)
+    assert fat == fatorial(n), \
+      f"Seu código não está correto\nConfira seu envio."
 
-    assert mvn_output == "00  01  00  01", \
-            f"Seu código não está correto"
+def test_2_1():
+  test_2(0)
+
+def test_2_2():
+  test_2(1)
+
+def test_2_3():
+  test_2(4)
+
+def test_2_4():
+  test_2(5)
